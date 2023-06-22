@@ -39,9 +39,10 @@ const offset = {
   y: -650, // Adjust the position as needed
 };
 
+// Create boundary objects based on collision map
 collisionsMap.forEach((row, i) => {
   row.forEach((symbol, j) => {
-    if (symbol === 1025)
+    if (symbol === 1025) {
       boundaries.push(
         new Boundary({
           position: {
@@ -50,6 +51,7 @@ collisionsMap.forEach((row, i) => {
           },
         })
       );
+    }
   });
 });
 
@@ -100,7 +102,7 @@ class Sprite {
 // Player Sprite
 const player = new Sprite({
   position: {
-    // Draws player sprite in the centre of the map
+    // Draws player sprite in the center of the map
     x: canvas.width / 2 - 192 / 4 / 2, // Adjust the position as needed
     y: canvas.height / 2 - 68 / 2, // Adjust the position as needed
   },
@@ -127,10 +129,10 @@ const keys = {
   d: { pressed: false },
 };
 
-// Items that are moveable on the map
+// Items that are movable on the map
 const movables = [background, ...boundaries];
 
-// Detect collisions
+// Detect collisions between rectangles
 function rectangularCollisions({ rectangle1, rectangle2 }) {
   return (
     rectangle1.position.x + rectangle1.width >= rectangle2.position.x &&
@@ -145,12 +147,12 @@ function animate() {
   window.requestAnimationFrame(animate);
   background.draw();
 
-  // Draws the boundaries onto the map
+  // Draw the boundaries onto the map
   boundaries.forEach((boundary) => {
     boundary.draw();
   });
 
-  // Draws out player sprite
+  // Draw the player sprite
   player.draw();
 
   // Move the background sprite based on key states
@@ -175,10 +177,11 @@ function animate() {
         break;
       }
     }
-    if (moving)
+    if (moving) {
       movables.forEach((movable) => {
         movable.position.y += 3;
       });
+    }
   } else if (keys.s.pressed && lastKey === "s") {
     for (let i = 0; i < boundaries.length; i++) {
       // Use boundary detection function on player and boundary
@@ -199,10 +202,11 @@ function animate() {
         break;
       }
     }
-    if (moving)
+    if (moving) {
       movables.forEach((movable) => {
         movable.position.y -= 3;
       });
+    }
   } else if (keys.a.pressed && lastKey === "a") {
     for (let i = 0; i < boundaries.length; i++) {
       // Use boundary detection function on player and boundary
@@ -223,10 +227,11 @@ function animate() {
         break;
       }
     }
-    if (moving)
+    if (moving) {
       movables.forEach((movable) => {
         movable.position.x += 3;
       });
+    }
   } else if (keys.d.pressed && lastKey === "d") {
     for (let i = 0; i < boundaries.length; i++) {
       // Use boundary detection function on player and boundary
@@ -247,10 +252,11 @@ function animate() {
         break;
       }
     }
-    if (moving)
+    if (moving) {
       movables.forEach((movable) => {
         movable.position.x -= 3;
       });
+    }
   }
 }
 
