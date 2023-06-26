@@ -71,7 +71,7 @@ class Boundary {
   // Draw the boundary on the canvas for debugging purposes.
   // It uses transparent red color.
   draw() {
-    c.fillStyle = "rgba(255, 0, 0, 0)"; // Transparent red color.
+    c.fillStyle = "rgba(255, 0, 0, 0.5)"; // Transparent red color.
     // Draw the rectangle at the boundary's position with its width and height.
     c.fillRect(this.position.x, this.position.y, this.width, this.height);
   }

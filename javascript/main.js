@@ -12,49 +12,60 @@ for (let i = 0; i < collisions.length; i += 70) {
   collisionsMap.push(collisions.slice(i, i + 70));
 }
 
+// Generate battle boundaries map by slicing into rows.
+const battleZonesMap = [];
+for (let i = 0; i < battleZonesData.length; i += 70) {
+  battleZonesMap.push(battleZonesData.slice(i, i + 70));
+}
+
 // Position offset for the player.
 const offset = { x: -740, y: -650 };
 
-// Create boundary objects based on collision map.
-const boundaries = [];
-collisionsMap.forEach((row, i) => {
-  row.forEach((symbol, j) => {
-    if (symbol === 1025) {
-      boundaries.push(
-        new Boundary({
-          position: {
-            x: j * Boundary.width + offset.x,
-            y: i * Boundary.height + offset.y,
-          },
-        })
-      );
-    }
+const createBoundariesFromMap = (map, zonesArray) => {
+  const boundaries = [];
+  map.forEach((row, i) => {
+    row.forEach((symbol, j) => {
+      if (symbol === 1025) {
+        boundaries.push(
+          new Boundary({
+            position: {
+              x: j * Boundary.width + offset.x,
+              y: i * Boundary.height + offset.y,
+            },
+          })
+        );
+      }
+    });
   });
-});
+  zonesArray.push(...boundaries);
+};
+
+const boundaries = [];
+createBoundariesFromMap(collisionsMap, boundaries);
+
+const battleZones = [];
+createBoundariesFromMap(battleZonesMap, battleZones);
 
 // Set the canvas background to white.
 c.fillStyle = "white";
 c.fillRect(0, 0, canvas.width, canvas.height);
 
-// Load images for background and player in different orientations.
-const image = new Image();
-image.src = "../static/images/background.png";
+// Function to load images and save them
+const loadImage = (src) => {
+  const image = new Image();
+  image.src = src;
+  return image;
+};
 
-const playerDownImage = new Image();
-playerDownImage.src = "../static/images/playerDown.png";
-
-const playerUpImage = new Image();
-playerUpImage.src = "../static/images/playerUp.png";
-
-const playerLeftImage = new Image();
-playerLeftImage.src = "../static/images/playerLeft.png";
-
-const playerRightImage = new Image();
-playerRightImage.src = "../static/images/playerRight.png";
-
-// Load image for foreground.
-const foregroundImage = new Image();
-foregroundImage.src = "../static/images/foreground.png";
+// Load background
+const image = loadImage("../static/images/background.png");
+// Load foreground
+const foregroundImage = loadImage("../static/images/foreground.png");
+// Load player sprites
+const playerDownImage = loadImage("../static/images/playerDown.png");
+const playerUpImage = loadImage("../static/images/playerUp.png");
+const playerLeftImage = loadImage("../static/images/playerLeft.png");
+const playerRightImage = loadImage("../static/images/playerRight.png");
 
 // Create player sprite.
 const player = new Sprite({
@@ -93,7 +104,7 @@ const keys = {
 };
 
 // Array of movable items.
-const movables = [background, ...boundaries, foreground];
+const movables = [background, ...boundaries, foreground, ...battleZones];
 
 // Function to detect collisions between rectangles.
 function rectangularCollisions({ rectangle1, rectangle2 }) {
@@ -112,8 +123,9 @@ function animate() {
   // Draw the background.
   background.draw();
 
-  // Draw the boundaries.
+  // Draw the boundaries for map boundary and battle zones
   boundaries.forEach((boundary) => boundary.draw());
+  battleZones.forEach((battleZone) => battleZone.draw());
 
   // Draw the player.
   player.draw();
@@ -121,8 +133,36 @@ function animate() {
   // Draw the foreground.
   foreground.draw();
 
+  // Detect collision with battlezone, and activate a battle
+  if (keys.w.pressed || keys.a.pressed || keys.s.pressed || keys.d.pressed) {
+    for (let i = 0; i < battleZones.length; i++) {
+      const battleZone = battleZones[i];
+      const overlappingArea =
+        (Math.min(
+          player.position.x + player.width,
+          battleZone.position.x + battleZone.width
+        ) -
+          Math.max(player.position.x, battleZone.position.x)) *
+        (Math.min(
+          player.position.y + player.height,
+          battleZone.position.y + battleZone.height
+        ) -
+          Math.max(player.position.y, battleZone.position.y));
+      if (
+        rectangularCollisions({
+          rectangle1: player,
+          rectangle2: battleZone,
+        }) &&
+        overlappingArea > (player.width * player.height) / 2 &&
+        Math.random() < 0.005 // Only initiate an event in a 5/100 chance
+      ) {
+        console.log("Battle Zone collision");
+        break;
+      }
+    }
+  }
+
   // Handle player movement based on key states.
-  let moving = true;
   player.moving = false;
   const speed = 3;
   const checkCollision = (boundary, dx, dy) => {
