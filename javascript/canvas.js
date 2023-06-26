@@ -14,23 +14,6 @@ for (let i = 0; i < collisions.length; i += 70) {
   collisionsMap.push(collisions.slice(i, i + 70));
 }
 
-// Boundaries
-class Boundary {
-  static width = 48;
-  static height = 48;
-  constructor({ position }) {
-    this.position = position;
-    this.width = 48;
-    this.height = 48;
-  }
-
-  // Used to show boundaries - for debugging
-  draw() {
-    c.fillStyle = "rgba(255,0,0,0)";
-    c.fillRect(this.position.x, this.position.y, this.width, this.height);
-  }
-}
-
 const boundaries = [];
 
 // Offset the player from the upper-left hand side of the map
@@ -63,41 +46,22 @@ c.fillRect(0, 0, canvas.width, canvas.height);
 const image = new Image();
 image.src = "../static/images/background.png";
 
-// Create a new image object and set the source for the player
-const playerImage = new Image();
-playerImage.src = "../static/images/playerDown.png";
+// Create a new image object and set the source for the player for each orientation
+const playerDownImage = new Image();
+playerDownImage.src = "../static/images/playerDown.png";
 
-// Define a Sprite class to encapsulate drawing functionality
-class Sprite {
-  constructor({ position, image, frames = { max: 1, hold: 10 } }) {
-    this.position = position;
-    this.image = image;
-    this.frames = frames;
-    // Load after this.image is finished loading
-    this.image.onload = () => {
-      this.width = this.image.width / this.frames.max;
-      this.height = this.image.height;
-    };
-  }
+const playerUpImage = new Image();
+playerUpImage.src = "../static/images/playerUp.png";
 
-  // Draw the sprite onto the canvas
-  draw() {
-    // Draw the player image onto the canvas
-    c.drawImage(
-      this.image,
-      // Define the cropping of the player image (x_0, y_0, x_1, y_1)
-      0,
-      0,
-      this.image.width / this.frames.max,
-      this.image.height,
-      // Define the placement of the player image (x_0, y_0, x_1, y_1)
-      this.position.x,
-      this.position.y,
-      this.image.width / this.frames.max,
-      this.image.height
-    );
-  }
-}
+const playerLeftImage = new Image();
+playerLeftImage.src = "../static/images/playerLeft.png";
+
+const playerRightImage = new Image();
+playerRightImage.src = "../static/images/playerRight.png";
+
+// Create a new image object and set the source for the foreground
+const foregroundImage = new Image();
+foregroundImage.src = "../static/images/foreground.png";
 
 // Player Sprite
 const player = new Sprite({
@@ -106,9 +70,15 @@ const player = new Sprite({
     x: canvas.width / 2 - 192 / 4 / 2, // Adjust the position as needed
     y: canvas.height / 2 - 68 / 2, // Adjust the position as needed
   },
-  image: playerImage,
+  image: playerDownImage,
   frames: {
     max: 4,
+  },
+  sprites: {
+    up: playerUpImage,
+    down: playerDownImage,
+    left: playerLeftImage,
+    right: playerRightImage,
   },
 });
 
@@ -121,6 +91,15 @@ const background = new Sprite({
   image: image,
 });
 
+// Create a foreground sprite
+const foreground = new Sprite({
+  position: {
+    x: offset.x,
+    y: offset.y,
+  },
+  image: foregroundImage,
+});
+
 // Object to keep track of key states
 const keys = {
   w: { pressed: false },
@@ -130,7 +109,7 @@ const keys = {
 };
 
 // Items that are movable on the map
-const movables = [background, ...boundaries];
+const movables = [background, ...boundaries, foreground];
 
 // Detect collisions between rectangles
 function rectangularCollisions({ rectangle1, rectangle2 }) {
@@ -145,6 +124,8 @@ function rectangularCollisions({ rectangle1, rectangle2 }) {
 // Animate the canvas
 function animate() {
   window.requestAnimationFrame(animate);
+
+  // Draw the background onto the map
   background.draw();
 
   // Draw the boundaries onto the map
@@ -155,9 +136,15 @@ function animate() {
   // Draw the player sprite
   player.draw();
 
+  // Draw the foreground over the player
+  foreground.draw();
+
   // Move the background sprite based on key states
   let moving = true;
+  player.moving = false;
   if (keys.w.pressed && lastKey === "w") {
+    player.moving = true;
+    player.image = player.sprites.up;
     for (let i = 0; i < boundaries.length; i++) {
       // Use boundary detection function on player and boundary
       const boundary = boundaries[i];
@@ -183,6 +170,8 @@ function animate() {
       });
     }
   } else if (keys.s.pressed && lastKey === "s") {
+    player.moving = true;
+    player.image = player.sprites.down;
     for (let i = 0; i < boundaries.length; i++) {
       // Use boundary detection function on player and boundary
       const boundary = boundaries[i];
@@ -208,6 +197,8 @@ function animate() {
       });
     }
   } else if (keys.a.pressed && lastKey === "a") {
+    player.moving = true;
+    player.image = player.sprites.left;
     for (let i = 0; i < boundaries.length; i++) {
       // Use boundary detection function on player and boundary
       const boundary = boundaries[i];
@@ -233,6 +224,8 @@ function animate() {
       });
     }
   } else if (keys.d.pressed && lastKey === "d") {
+    player.moving = true;
+    player.image = player.sprites.right;
     for (let i = 0; i < boundaries.length; i++) {
       // Use boundary detection function on player and boundary
       const boundary = boundaries[i];
