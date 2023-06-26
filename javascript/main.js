@@ -1,26 +1,31 @@
-// Get the canvas element and its 2D rendering context.
+// Step 1: Get the canvas element and its 2D rendering context.
 const canvas = document.querySelector("canvas");
 const c = canvas.getContext("2d");
 
-// Set the canvas dimensions.
+// Step 2: Set the canvas dimensions.
 canvas.width = 1024;
 canvas.height = 576;
 
-// Generate collision map by slicing into rows.
+// Step 3: Set the canvas background to white.
+c.fillStyle = "white";
+c.fillRect(0, 0, canvas.width, canvas.height);
+
+// Step 4: Generate collision map by slicing into rows.
 const collisionsMap = [];
 for (let i = 0; i < collisions.length; i += 70) {
   collisionsMap.push(collisions.slice(i, i + 70));
 }
 
-// Generate battle boundaries map by slicing into rows.
+// Step 5: Generate battle boundaries map by slicing into rows.
 const battleZonesMap = [];
 for (let i = 0; i < battleZonesData.length; i += 70) {
   battleZonesMap.push(battleZonesData.slice(i, i + 70));
 }
 
-// Position offset for the player.
+// Step 6: Define position offset for the player.
 const offset = { x: -740, y: -650 };
 
+// Step 7: Define a function to create boundaries from the collision map.
 const createBoundariesFromMap = (map, zonesArray) => {
   const boundaries = [];
   map.forEach((row, i) => {
@@ -40,34 +45,29 @@ const createBoundariesFromMap = (map, zonesArray) => {
   zonesArray.push(...boundaries);
 };
 
+// Step 8: Create boundaries and battle zones using the function defined above.
 const boundaries = [];
 createBoundariesFromMap(collisionsMap, boundaries);
 
 const battleZones = [];
 createBoundariesFromMap(battleZonesMap, battleZones);
 
-// Set the canvas background to white.
-c.fillStyle = "white";
-c.fillRect(0, 0, canvas.width, canvas.height);
-
-// Function to load images and save them
+// Step 9: Define a function to load images.
 const loadImage = (src) => {
   const image = new Image();
   image.src = src;
   return image;
 };
 
-// Load background
+// Step 10: Load images for the background, foreground, and player sprites.
 const image = loadImage("../static/images/background.png");
-// Load foreground
 const foregroundImage = loadImage("../static/images/foreground.png");
-// Load player sprites
 const playerDownImage = loadImage("../static/images/playerDown.png");
 const playerUpImage = loadImage("../static/images/playerUp.png");
 const playerLeftImage = loadImage("../static/images/playerLeft.png");
 const playerRightImage = loadImage("../static/images/playerRight.png");
 
-// Create player sprite.
+// Step 11: Create sprites for the player, background, and foreground.
 const player = new Sprite({
   position: {
     x: canvas.width / 2 - 192 / 4 / 2,
@@ -83,19 +83,17 @@ const player = new Sprite({
   },
 });
 
-// Create background sprite.
 const background = new Sprite({
   position: { x: offset.x, y: offset.y },
   image: image,
 });
 
-// Create foreground sprite.
 const foreground = new Sprite({
   position: { x: offset.x, y: offset.y },
   image: foregroundImage,
 });
 
-// Object to keep track of key states.
+// Step 12: Initialize an object to keep track of key states.
 const keys = {
   w: { pressed: false },
   s: { pressed: false },
@@ -103,10 +101,10 @@ const keys = {
   d: { pressed: false },
 };
 
-// Array of movable items.
+// Step 13: Initialize an array of movable items.
 const movables = [background, ...boundaries, foreground, ...battleZones];
 
-// Function to detect collisions between rectangles.
+// Step 14: Define a function to detect collisions between rectangles.
 function rectangularCollisions({ rectangle1, rectangle2 }) {
   return (
     rectangle1.position.x + rectangle1.width >= rectangle2.position.x &&
@@ -116,7 +114,7 @@ function rectangularCollisions({ rectangle1, rectangle2 }) {
   );
 }
 
-// Function to animate the canvas.
+// Step 15: Define the main animation function.
 function animate() {
   window.requestAnimationFrame(animate);
 
@@ -203,10 +201,10 @@ function animate() {
   }
 }
 
-// Start animation.
+// Step 16: Start the animation.
 animate();
 
-// Event listeners for keyboard input.
+// Step 17: Add event listeners for keyboard input.
 window.addEventListener("keydown", (e) => {
   if (["w", "s", "a", "d"].includes(e.key)) {
     keys[e.key].pressed = true;
