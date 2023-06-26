@@ -1,62 +1,78 @@
-// Define a Sprite class to encapsulate drawing functionality
 class Sprite {
+  /* Initialise a new Sprite class, representing an image or animation that is to be drawn onto the canvas.
+   * Args:
+   * - position: {x, y} coordinates to position the sprite on the canvas.
+   * - image: Image object representing the sprite's image.
+   * - frames: Object with 'max' property indicating the total number of frames in the sprite's animation.
+   * - sprites: Array of additional sprites that can be used (optional).
+   */
   constructor({ position, image, frames = { max: 1 }, sprites = [] }) {
     this.position = position;
     this.image = image;
+    // Adding additional properties to frames - val and elapsed to keep track of animation progress.
     this.frames = { ...frames, val: 0, elapsed: 0 };
-    // Load after this.image is finished loading
+    this.moving = false;
+    this.sprites = sprites;
+
+    // Calculate width and height of each frame after the image is loaded.
     this.image.onload = () => {
       this.width = this.image.width / this.frames.max;
       this.height = this.image.height;
     };
-    this.moving = false;
-    this.sprites = sprites;
   }
 
-  // Draw the sprite onto the canvas
+  // Draw the sprite on the canvas.
   draw() {
-    // Draw the player image onto the canvas
+    // Draw the sprite image onto the canvas.
     c.drawImage(
       this.image,
-      // Define the cropping of the player image (x_0, y_0, x_1, y_1)
+      // Crop to current frame (x_0, y_0, x_1, y_1).
       this.frames.val * this.width,
       0,
-      this.image.width / this.frames.max,
+      this.width,
       this.image.height,
-      // Define the placement of the player image (x_0, y_0, x_1, y_1)
+      // Position on canvas (x_0, y_0, x_1, y_1).
       this.position.x,
       this.position.y,
-      this.image.width / this.frames.max,
+      this.width,
       this.image.height
     );
-    // If the player isnt holding a keydown, return
-    if (!this.moving) return;
 
-    // Else if the player is moving
-    if (this.frames.max > 1) {
-      this.frames.elapsed++;
-    }
+    // If the sprite is not moving or does not have animation frames, do not update frame.
+    if (!this.moving || this.frames.max <= 1) return;
+
+    // Update the elapsed frame counter.
+    this.frames.elapsed++;
+
+    // Change frame every 10 draws (modulated by elapsed).
     if (this.frames.elapsed % 10 === 0) {
-      // Iterates through the frames of the character sprite
-      if (this.frames.val < this.frames.max - 1) this.frames.val++;
-      else this.frames.val = 0;
+      // Iterate through the frames.
+      this.frames.val = (this.frames.val + 1) % this.frames.max;
     }
   }
 }
 
-// Boundaries
 class Boundary {
+  /* Boundary class representing a rectangular area that can be used to detect collisions.
+   */
+  // Constants representing the default width and height of the boundary.
   static width = 48;
   static height = 48;
+
+  // Initialize a new boundary.
+  // - position: {x, y} coordinates to position the boundary on the canvas.
   constructor({ position }) {
     this.position = position;
-    this.width = 48;
-    this.height = 48;
+    // Set the width and height of the boundary.
+    this.width = Boundary.width;
+    this.height = Boundary.height;
   }
 
-  // Used to show boundaries - for debugging
+  // Draw the boundary on the canvas for debugging purposes.
+  // It uses transparent red color.
   draw() {
-    c.fillStyle = "rgba(255,0,0,0)";
+    c.fillStyle = "rgba(255, 0, 0, 0)"; // Transparent red color.
+    // Draw the rectangle at the boundary's position with its width and height.
     c.fillRect(this.position.x, this.position.y, this.width, this.height);
   }
 }

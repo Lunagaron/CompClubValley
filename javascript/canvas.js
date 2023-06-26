@@ -1,28 +1,22 @@
-// Select the canvas element from the document
+// Get the canvas element and its 2D rendering context.
 const canvas = document.querySelector("canvas");
-
-// Get the 2D rendering context of the canvas
 const c = canvas.getContext("2d");
 
-// Set the width and height of the canvas to a 16:9 aspect ratio
+// Set the canvas dimensions.
 canvas.width = 1024;
 canvas.height = 576;
 
-// Slice out each pixel layer to parse collisions
+// Generate collision map by slicing into rows.
 const collisionsMap = [];
 for (let i = 0; i < collisions.length; i += 70) {
   collisionsMap.push(collisions.slice(i, i + 70));
 }
 
+// Position offset for the player.
+const offset = { x: -740, y: -650 };
+
+// Create boundary objects based on collision map.
 const boundaries = [];
-
-// Offset the player from the upper-left hand side of the map
-const offset = {
-  x: -740, // Adjust the position as needed
-  y: -650, // Adjust the position as needed
-};
-
-// Create boundary objects based on collision map
 collisionsMap.forEach((row, i) => {
   row.forEach((symbol, j) => {
     if (symbol === 1025) {
@@ -38,15 +32,14 @@ collisionsMap.forEach((row, i) => {
   });
 });
 
-// Fill the canvas with a white background
+// Set the canvas background to white.
 c.fillStyle = "white";
 c.fillRect(0, 0, canvas.width, canvas.height);
 
-// Create a new image object and set the source for the background
+// Load images for background and player in different orientations.
 const image = new Image();
 image.src = "../static/images/background.png";
 
-// Create a new image object and set the source for the player for each orientation
 const playerDownImage = new Image();
 playerDownImage.src = "../static/images/playerDown.png";
 
@@ -59,21 +52,18 @@ playerLeftImage.src = "../static/images/playerLeft.png";
 const playerRightImage = new Image();
 playerRightImage.src = "../static/images/playerRight.png";
 
-// Create a new image object and set the source for the foreground
+// Load image for foreground.
 const foregroundImage = new Image();
 foregroundImage.src = "../static/images/foreground.png";
 
-// Player Sprite
+// Create player sprite.
 const player = new Sprite({
   position: {
-    // Draws player sprite in the center of the map
-    x: canvas.width / 2 - 192 / 4 / 2, // Adjust the position as needed
-    y: canvas.height / 2 - 68 / 2, // Adjust the position as needed
+    x: canvas.width / 2 - 192 / 4 / 2,
+    y: canvas.height / 2 - 68 / 2,
   },
   image: playerDownImage,
-  frames: {
-    max: 4,
-  },
+  frames: { max: 4 },
   sprites: {
     up: playerUpImage,
     down: playerDownImage,
@@ -82,25 +72,19 @@ const player = new Sprite({
   },
 });
 
-// Create a background sprite
+// Create background sprite.
 const background = new Sprite({
-  position: {
-    x: offset.x,
-    y: offset.y,
-  },
+  position: { x: offset.x, y: offset.y },
   image: image,
 });
 
-// Create a foreground sprite
+// Create foreground sprite.
 const foreground = new Sprite({
-  position: {
-    x: offset.x,
-    y: offset.y,
-  },
+  position: { x: offset.x, y: offset.y },
   image: foregroundImage,
 });
 
-// Object to keep track of key states
+// Object to keep track of key states.
 const keys = {
   w: { pressed: false },
   s: { pressed: false },
@@ -108,10 +92,10 @@ const keys = {
   d: { pressed: false },
 };
 
-// Items that are movable on the map
+// Array of movable items.
 const movables = [background, ...boundaries, foreground];
 
-// Detect collisions between rectangles
+// Function to detect collisions between rectangles.
 function rectangularCollisions({ rectangle1, rectangle2 }) {
   return (
     rectangle1.position.x + rectangle1.width >= rectangle2.position.x &&
@@ -121,176 +105,76 @@ function rectangularCollisions({ rectangle1, rectangle2 }) {
   );
 }
 
-// Animate the canvas
+// Function to animate the canvas.
 function animate() {
   window.requestAnimationFrame(animate);
 
-  // Draw the background onto the map
+  // Draw the background.
   background.draw();
 
-  // Draw the boundaries onto the map
-  boundaries.forEach((boundary) => {
-    boundary.draw();
-  });
+  // Draw the boundaries.
+  boundaries.forEach((boundary) => boundary.draw());
 
-  // Draw the player sprite
+  // Draw the player.
   player.draw();
 
-  // Draw the foreground over the player
+  // Draw the foreground.
   foreground.draw();
 
-  // Move the background sprite based on key states
+  // Handle player movement based on key states.
   let moving = true;
   player.moving = false;
-  if (keys.w.pressed && lastKey === "w") {
+  const speed = 3;
+  const checkCollision = (boundary, dx, dy) => {
+    return rectangularCollisions({
+      rectangle1: player,
+      rectangle2: {
+        ...boundary,
+        position: { x: boundary.position.x + dx, y: boundary.position.y + dy },
+      },
+    });
+  };
+
+  // Handling movement and collisions for each direction.
+  if (keys.w.pressed) {
     player.moving = true;
     player.image = player.sprites.up;
-    for (let i = 0; i < boundaries.length; i++) {
-      // Use boundary detection function on player and boundary
-      const boundary = boundaries[i];
-      if (
-        rectangularCollisions({
-          rectangle1: player,
-          rectangle2: {
-            ...boundary,
-            position: {
-              x: boundary.position.x,
-              y: boundary.position.y + 3,
-            },
-          },
-        })
-      ) {
-        moving = false;
-        break;
-      }
+    if (!boundaries.some((b) => checkCollision(b, 0, speed))) {
+      movables.forEach((m) => (m.position.y += speed));
     }
-    if (moving) {
-      movables.forEach((movable) => {
-        movable.position.y += 3;
-      });
-    }
-  } else if (keys.s.pressed && lastKey === "s") {
+  } else if (keys.s.pressed) {
     player.moving = true;
     player.image = player.sprites.down;
-    for (let i = 0; i < boundaries.length; i++) {
-      // Use boundary detection function on player and boundary
-      const boundary = boundaries[i];
-      if (
-        rectangularCollisions({
-          rectangle1: player,
-          rectangle2: {
-            ...boundary,
-            position: {
-              x: boundary.position.x,
-              y: boundary.position.y - 3,
-            },
-          },
-        })
-      ) {
-        moving = false;
-        break;
-      }
+    if (!boundaries.some((b) => checkCollision(b, 0, -speed))) {
+      movables.forEach((m) => (m.position.y -= speed));
     }
-    if (moving) {
-      movables.forEach((movable) => {
-        movable.position.y -= 3;
-      });
-    }
-  } else if (keys.a.pressed && lastKey === "a") {
+  } else if (keys.a.pressed) {
     player.moving = true;
     player.image = player.sprites.left;
-    for (let i = 0; i < boundaries.length; i++) {
-      // Use boundary detection function on player and boundary
-      const boundary = boundaries[i];
-      if (
-        rectangularCollisions({
-          rectangle1: player,
-          rectangle2: {
-            ...boundary,
-            position: {
-              x: boundary.position.x + 3,
-              y: boundary.position.y,
-            },
-          },
-        })
-      ) {
-        moving = false;
-        break;
-      }
+    if (!boundaries.some((b) => checkCollision(b, speed, 0))) {
+      movables.forEach((m) => (m.position.x += speed));
     }
-    if (moving) {
-      movables.forEach((movable) => {
-        movable.position.x += 3;
-      });
-    }
-  } else if (keys.d.pressed && lastKey === "d") {
+  } else if (keys.d.pressed) {
     player.moving = true;
     player.image = player.sprites.right;
-    for (let i = 0; i < boundaries.length; i++) {
-      // Use boundary detection function on player and boundary
-      const boundary = boundaries[i];
-      if (
-        rectangularCollisions({
-          rectangle1: player,
-          rectangle2: {
-            ...boundary,
-            position: {
-              x: boundary.position.x - 3,
-              y: boundary.position.y,
-            },
-          },
-        })
-      ) {
-        moving = false;
-        break;
-      }
-    }
-    if (moving) {
-      movables.forEach((movable) => {
-        movable.position.x -= 3;
-      });
+    if (!boundaries.some((b) => checkCollision(b, -speed, 0))) {
+      movables.forEach((m) => (m.position.x -= speed));
     }
   }
 }
 
+// Start animation.
 animate();
 
-// Event listeners for keydown and keyup events
-let lastKey = "";
+// Event listeners for keyboard input.
 window.addEventListener("keydown", (e) => {
-  switch (e.key) {
-    case "w":
-      keys.w.pressed = true;
-      lastKey = "w";
-      break;
-    case "s":
-      keys.s.pressed = true;
-      lastKey = "s";
-      break;
-    case "a":
-      keys.a.pressed = true;
-      lastKey = "a";
-      break;
-    case "d":
-      keys.d.pressed = true;
-      lastKey = "d";
-      break;
+  if (["w", "s", "a", "d"].includes(e.key)) {
+    keys[e.key].pressed = true;
   }
 });
 
 window.addEventListener("keyup", (e) => {
-  switch (e.key) {
-    case "w":
-      keys.w.pressed = false;
-      break;
-    case "s":
-      keys.s.pressed = false;
-      break;
-    case "a":
-      keys.a.pressed = false;
-      break;
-    case "d":
-      keys.d.pressed = false;
-      break;
+  if (["w", "s", "a", "d"].includes(e.key)) {
+    keys[e.key].pressed = false;
   }
 });
