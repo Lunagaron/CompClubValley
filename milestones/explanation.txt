@@ -1,0 +1,5 @@
+Milestone 1 - Setup basic canvas
+
+Milestone 2 - Render out character and map (without any movement)
+
+Milestone 3 - Movement and Collisions
