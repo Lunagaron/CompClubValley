@@ -1,78 +1,86 @@
 class Sprite {
-  /* Initialise a new Sprite class, representing an image or animation that is to be drawn onto the canvas.
-   * Args:
-   * - position: {x, y} coordinates to position the sprite on the canvas.
-   * - image: Image object representing the sprite's image.
-   * - frames: Object with 'max' property indicating the total number of frames in the sprite's animation.
-   * - sprites: Array of additional sprites that can be used (optional).
+  /*
+   * The Sprite class is used to create animated images on the canvas.
+   *
+   * Arguments:
+   * - position: an object with 'x' and 'y' properties to set the starting position of the sprite on the canvas.
+   * - image: an Image object which is the picture of the sprite.
+   * - frames: an object that has 'max' property telling how many animation frames are there. Default is 1 if not given.
+   * - sprites: an array of extra sprites (not used in this example).
    */
   constructor({ position, image, frames = { max: 1 }, sprites = [] }) {
+    // Set the position, image, and additional sprites
     this.position = position;
     this.image = image;
-    // Adding additional properties to frames - val and elapsed to keep track of animation progress.
+    // frames is used to control animation. It has val and elapsed properties that help in controlling which frame to show.
     this.frames = { ...frames, val: 0, elapsed: 0 };
-    this.moving = false;
+    this.moving = false; // If the sprite is moving or not.
     this.sprites = sprites;
 
-    // Calculate width and height of each frame after the image is loaded.
+    // Once the image is loaded, calculate the width and height of each frame.
     this.image.onload = () => {
       this.width = this.image.width / this.frames.max;
       this.height = this.image.height;
     };
   }
 
-  // Draw the sprite on the canvas.
+  // This function is used to draw the sprite on the canvas.
   draw() {
-    // Draw the sprite image onto the canvas.
+    // Draw part of the image on the canvas. This is used for animations.
     c.drawImage(
       this.image,
-      // Crop to current frame (x_0, y_0, x_1, y_1).
+      // Select the portion of the image to draw by defining a rectangle.
       this.frames.val * this.width,
       0,
       this.width,
       this.image.height,
-      // Position on canvas (x_0, y_0, x_1, y_1).
+      // Define where on the canvas the image should be drawn.
       this.position.x,
       this.position.y,
       this.width,
       this.image.height
     );
 
-    // If the sprite is not moving or does not have animation frames, do not update frame.
+    // If the sprite is not moving or has only one frame, don't change frames.
     if (!this.moving || this.frames.max <= 1) return;
 
-    // Update the elapsed frame counter.
+    // Count how many times the sprite has been drawn
     this.frames.elapsed++;
 
-    // Change frame every 10 draws (modulated by elapsed).
+    // Change the frame every 10 draws to create the animation effect.
     if (this.frames.elapsed % 10 === 0) {
-      // Iterate through the frames.
+      // Move to the next frame, if it's past the last frame, go back to the first.
       this.frames.val = (this.frames.val + 1) % this.frames.max;
     }
   }
 }
 
 class Boundary {
-  /* Boundary class representing a rectangular area that can be used to detect collisions.
+  /*
+   * The Boundary class represents a rectangle that can be used to check if something
+   * has collided with it.
    */
-  // Constants representing the default width and height of the boundary.
+
+  // These are default values for the width and height of the rectangle.
   static width = 48;
   static height = 48;
 
-  // Initialize a new boundary.
-  // - position: {x, y} coordinates to position the boundary on the canvas.
+  /*
+   * Initialize a new boundary.
+   * - position: an object with 'x' and 'y' to set where the rectangle is placed on the canvas.
+   */
   constructor({ position }) {
     this.position = position;
-    // Set the width and height of the boundary.
+    // Set the width and height of the rectangle.
     this.width = Boundary.width;
     this.height = Boundary.height;
   }
 
-  // Draw the boundary on the canvas for debugging purposes.
-  // It uses transparent red color.
+  // This function is used to draw the rectangle on the canvas. Helpful for testing.
   draw() {
-    c.fillStyle = "rgba(255, 0, 0, 0.5)"; // Transparent red color.
-    // Draw the rectangle at the boundary's position with its width and height.
+    // Set the color of the rectangle to be transparent red.
+    c.fillStyle = "rgba(255, 0, 0, 0.5)";
+    // Draw the rectangle on the canvas at the specified position.
     c.fillRect(this.position.x, this.position.y, this.width, this.height);
   }
 }

@@ -39,7 +39,7 @@ const createBoundariesFromMap = (map, zonesArray) => {
   zonesArray.push(...boundaries);
 };
 
-// Step 8: Create boundaries and battle zones using the function defined above.
+// Step 8: Create boundaries using the function defined above.
 const boundaries = [];
 createBoundariesFromMap(collisionsMap, boundaries);
 
@@ -95,7 +95,7 @@ const keys = {
 // Step 13: Initialize an array of movable items.
 const movables = [background, ...boundaries, foreground];
 
-// Step 14: Define a function to detect collisions between rectangles.
+// Step 14: Define a function to detect collisions between rectangle bounded objects.
 function rectangularCollisions({ rectangle1, rectangle2 }) {
   return (
     rectangle1.position.x + rectangle1.width >= rectangle2.position.x &&
